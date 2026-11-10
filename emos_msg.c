@@ -22,46 +22,62 @@ void emos_msg_init(emos_msg_t *msg)
 
 uint8_t emos_msg_is_pending(emos_msg_t *msg)
 {
-    return msg->head!= msg->tail?1:0;
+    return msg->head != msg->tail?1:0;
 }
 
 emos_status_t emos_msg_send( emos_taskid_t id, uint8_t *msg)
 {
+    emos_status_t status;
     EMOS_ASSERT( id < EMOS_TASK_MAX );
     EMOS_ASSERT( msg != NULL );
+
+    EMOS_ENTER_CRITICAL(); 
     if( emos_task_array[id].task_cb == NULL )
     {
-        return EMOS_TASK_NO_EXIST;
-    }
-    emos_msg_t *q = &(emos_task_array[id].msg);
-    if((q->head - q->tail) < q->total)
-    {
-        q->queue[q->head%q->total] = (void *)msg;
-        q->head++;
-        return EMOS_OK;
+        status = EMOS_TASK_NO_EXIST;
     }
     else
     {
-        return EMOS_MSG_QUEUE_FULL;
-    };
+        emos_msg_t *q = &(emos_task_array[id].msg);
+        if((q->head - q->tail) < q->total)
+        {
+            q->queue[q->head%q->total] = (void *)msg;
+            q->head++;
+            status = EMOS_OK;
+        }
+        else
+        {
+            status = EMOS_MSG_QUEUE_FULL;
+        }
+    }
+    EMOS_EXIT_CRITICAL();
+    return status;  
 }  
 
 uint8_t* emos_msg_receive( emos_taskid_t id )
 {
+    uint8_t *msg;
+
     EMOS_ASSERT( id < EMOS_TASK_MAX );
+    EMOS_ENTER_CRITICAL(); 
     if( emos_task_array[id].task_cb == NULL )
     {
-        return NULL;
-    }
-    emos_msg_t *q = &(emos_task_array[id].msg);
-    if(q->head != q->tail)
-    {
-        uint8_t *msg = q->queue[q->tail%q->total];
-        q->tail++;
-        return msg;
+        msg=  NULL;
     }
     else
     {
-        return NULL;
-    };
+        emos_msg_t *q = &(emos_task_array[id].msg);
+        if(q->head != q->tail)
+        {
+            msg = q->queue[q->tail%q->total];
+            q->tail++;
+        }
+        else
+        {
+            msg=  NULL;
+        };
+    }
+    EMOS_EXIT_CRITICAL();
+
+    return msg;
 }

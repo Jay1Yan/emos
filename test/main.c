@@ -1,8 +1,7 @@
-/* emos PC 端验证：每圈循环模拟推进 100ms tick，输出完全确定。
- * 两个独立测试，命令行选择，公共的调度驱动循环在 main 里跑一遍：
- *   ./emos.exe event   只跑事件测试（周期 / 一次性 / 立即触发与重发）
- *   ./emos.exe msg     只跑消息测试（tx 周期发消息，rx 在 SYS_EVENT_MSG 里收空队列并释放）
- *   ./emos.exe         两个都跑 */
+/* 两个独立测试，命令行选择，公共的调度驱动循环在 main 里跑一遍：
+ *   ./emos event   只跑事件测试（周期 / 一次性 / 立即触发与重发）
+ *   ./emos msg     只跑消息测试（tx 周期发消息，rx 在 SYS_EVENT_MSG 里收空队列并释放）
+ *   ./emos         两个都跑 */
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>

@@ -3,25 +3,23 @@ CFLAGS  ?= -std=c99 -Wall -Wextra -g
 DEFS     = -DEMOS_DEBUG
 INC      = -I..
 SRC      = ../emos.c ../emos_mem.c ../emos_msg.c main.c
+SRC_TEST = ../emos.c ../emos_mem.c ../emos_msg.c test_auto.c
 
-# Windows（含 MSYS2/Git Bash 环境）生成 .exe，Linux/WSL 生成无后缀
-UNAME_S := $(shell uname -s 2>/dev/null)
-ifeq ($(OS),Windows_NT)
-    BIN = emos.exe
-else ifneq (,$(findstring MSYS,$(UNAME_S)))
-    BIN = emos.exe
-else ifneq (,$(findstring MINGW,$(UNAME_S)))
-    BIN = emos.exe
-else
-    BIN = emos
-endif
+BIN      = emos
+BIN_TEST = emos_test
 
 all: $(BIN)
 
-$(BIN): $(SRC) ../emos.h ../emos_config.h
+$(BIN): $(SRC) ../emos.h ../emos_config.h ../emos_mem.h ../emos_msg.h
 	$(CC) $(CFLAGS) $(DEFS) $(INC) -o $@ $(SRC)
 
-clean:
-	rm -f emos.exe emos
+test: $(BIN_TEST)
+	./$(BIN_TEST)
 
-.PHONY: all run clean
+$(BIN_TEST): $(SRC_TEST) ../emos.h ../emos_config.h ../emos_mem.h ../emos_msg.h
+	$(CC) $(CFLAGS) $(DEFS) $(INC) -o $@ $(SRC_TEST)
+
+clean:
+	rm -f emos emos_test
+
+.PHONY: all run test clean

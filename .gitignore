@@ -1,6 +1,7 @@
 # 构建产物
-test/emos.exe
-test/emos
+emos.exe
+emos
+emos_test
 *.o
 
 # 本机编辑器配置
