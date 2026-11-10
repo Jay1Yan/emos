@@ -9,10 +9,20 @@
 #define EMOS_DELAY_EVENTS_MAX       10
 #endif
 
-/* #define EMOS_DEBUG */
 
-/* 断言*/
-#if defined(EMOS_DEBUG)
+#ifndef EMOS_MEM_BUF_SIZE
+#define EMOS_MEM_BUF_SIZE           1024
+#endif
+
+#ifndef EMOS_MEM_BLK_MAX
+#define EMOS_MEM_BLK_MAX            10
+#endif
+
+#ifndef EMOS_MSG_LEN_MAX
+#define EMOS_MSG_LEN_MAX            10
+#endif
+
+#if !defined(EMOS_ASSERT_DISABLE)
   #define EMOS_ASSERT(cond)  do { if (!(cond)) emos_assert_fail(__FILE__, __LINE__); } while (0)
 #else
   #define EMOS_ASSERT(cond)  ((void)0)

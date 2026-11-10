@@ -2,7 +2,7 @@ CC      = gcc
 CFLAGS  ?= -std=c99 -Wall -Wextra -g
 DEFS     = -DEMOS_DEBUG
 INC      = -I..
-SRC      = ../emos.c main.c
+SRC      = ../emos.c ../emos_mem.c main.c
 
 # Windows（含 MSYS2/Git Bash 环境）生成 .exe，Linux/WSL 生成无后缀
 UNAME_S := $(shell uname -s 2>/dev/null)

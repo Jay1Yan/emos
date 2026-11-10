@@ -4,10 +4,7 @@
 #include <stdlib.h>
 #include "emos.h"
 
-#define EV_LED_BLINK    0x0001
-#define EV_LED_BUTTON   0x0002
-#define EV_WORK_ONESHOT 0x0004
-
+/* 事件表：每个任务独立一张，从 bit0 编起；高4位系统保留 */
 /* 模拟硬件 tick，单位 ms；由主循环每圈推进 100ms */
 static emos_tick_t sim_tick = 0;
 
@@ -23,24 +20,28 @@ void emos_assert_fail( const char *file, int line )
     abort();
 }
 
+EMOS_DEFINE_EVENTS( EV_LED, EV_LED_BLINK, EV_LED_BUTTON );
+
 static void task_led( emos_taskid_t id, emos_event_t events )
 {
     (void)id;
-    if( events & EV_LED_BLINK )
+    if( events & EMOS_EV(EV_LED_BLINK) )
     {
         printf( "[%5u ms] LED  : toggle\n", (unsigned)tick_ms() );
     }
-    if( events & EV_LED_BUTTON )
+    if( events & EMOS_EV(EV_LED_BUTTON) )
     {
         printf( "[%5u ms] LED  : button pressed\n", (unsigned)tick_ms() );
-        emos_event_post(id, EV_LED_BUTTON );  
+        emos_event_post(id, EMOS_EV(EV_LED_BUTTON) );
     }
 }
+
+EMOS_DEFINE_EVENTS( EV_WORK, EV_WORK_ONESHOT );
 
 static void task_work( emos_taskid_t id, emos_event_t events )
 {
     (void)id;
-    if( events & EV_WORK_ONESHOT )
+    if( events & EMOS_EV(EV_WORK_ONESHOT) )
     {
         printf( "[%5u ms] work : one-shot fired (should print only once)\n", (unsigned)tick_ms() );
     }
@@ -50,7 +51,7 @@ int main( void )
 {
     emos_taskid_t led, work;
 
-    emos_init( tick_ms );
+    emos_init(tick_ms);
 
     if(( emos_task_register( task_led,  &led )  != EMOS_OK )||
        ( emos_task_register( task_work, &work ) != EMOS_OK ))
@@ -59,9 +60,9 @@ int main( void )
         return 1;
     }
 
-    emos_event_post_every( led,  EV_LED_BLINK,    500 );  /* 每 500ms 闪烁   */
-    emos_event_post(       led,  EV_LED_BUTTON );         /* 立即触发一次    */
-    emos_event_post_after( work, EV_WORK_ONESHOT, 2000 ); /* 2s 后一次性触发 */
+    emos_event_post_every( led,  EMOS_EV(EV_LED_BLINK),    500 );  /* 每 500ms 闪烁   */
+    emos_event_post(       led,  EMOS_EV(EV_LED_BUTTON) );         /* 立即触发一次    */
+    emos_event_post_after( work, EMOS_EV(EV_WORK_ONESHOT), 2000 ); /* 2s 后一次性触发 */
 
     for( uint32_t loop = 0; loop < 60; loop++ )   /* 每圈 100ms，共 6s */
     {
