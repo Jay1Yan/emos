@@ -10,8 +10,8 @@
 #endif
 
 
-#ifndef EMOS_MEM_BUF_SIZE
-#define EMOS_MEM_BUF_SIZE           1024
+#ifndef EMOS_MEM_USER_BUF_SIZE
+#define EMOS_MEM_USER_BUF_SIZE      1024
 #endif
 
 #ifndef EMOS_MEM_BLK_MAX

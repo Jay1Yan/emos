@@ -26,6 +26,10 @@ static const emos_mem_pool_cfg_t emos_mem_cfg_tab[] = {
 
 static emos_mem_pool_t emos_mem_pool[EMOS_MEM_POOL_NUM];
 
+#define EMOS_MEM_BUF_SIZE (EMOS_MEM_USER_BUF_SIZE+\
+    sizeof(emos_task_t)*EMOS_TASK_MAX+\
+    sizeof(emos_delay_events_t)*EMOS_DELAY_EVENTS_MAX)
+
 static uint8_t emos_mem_buf[EMOS_MEM_BUF_SIZE];
 
 void emos_mem_init(void)

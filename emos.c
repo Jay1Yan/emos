@@ -1,5 +1,6 @@
 #include "emos.h"
 #include "emos_mem.h"
+#include "emos_msg.h"
 
 static emos_tick_get_t tick_get;
 emos_task_t *emos_task_array;
@@ -22,7 +23,7 @@ emos_task_t * emos_get_task_array(void)
     return emos_task_array;
 }
 
-emos_task_status_t emos_task_register( emos_task_cb_t task_cb, emos_taskid_t *taskid )
+emos_status_t emos_task_register( emos_task_cb_t task_cb, emos_taskid_t *taskid )
 {
     EMOS_ASSERT( task_cb != NULL );
     for(emos_taskid_t id = 0;id < EMOS_TASK_MAX;id++)
@@ -30,7 +31,8 @@ emos_task_status_t emos_task_register( emos_task_cb_t task_cb, emos_taskid_t *ta
         if(emos_task_array[id].task_cb == NULL )
         {
             emos_task_array[id].task_cb = task_cb;
-            emos_task_array[id].events = 0;  
+            emos_task_array[id].events = 0;
+            emos_msg_init(&(emos_task_array[id].msg)); 
             *taskid = id;
             return EMOS_OK;
         }
@@ -38,7 +40,7 @@ emos_task_status_t emos_task_register( emos_task_cb_t task_cb, emos_taskid_t *ta
     return EMOS_TASK_ARRAY_FULL;    
 }
 
-static emos_task_status_t emos_delay_event_delete( emos_taskid_t id)
+static emos_status_t emos_delay_event_delete( emos_taskid_t id)
 {
     for( uint16_t i = 0;i < EMOS_DELAY_EVENTS_MAX;i++)
     {
@@ -57,7 +59,7 @@ static emos_task_status_t emos_delay_event_delete( emos_taskid_t id)
     return EMOS_OK;
 }
 
-emos_task_status_t emos_task_delete(emos_taskid_t taskid )
+emos_status_t emos_task_delete(emos_taskid_t taskid )
 {
     EMOS_ASSERT( taskid < EMOS_TASK_MAX );
     if( emos_task_array[taskid].task_cb == NULL )
@@ -69,7 +71,7 @@ emos_task_status_t emos_task_delete(emos_taskid_t taskid )
     return EMOS_OK;    
 }
 
-emos_task_status_t emos_event_post( emos_taskid_t id, emos_event_t events )
+emos_status_t emos_event_post( emos_taskid_t id, emos_event_t events )
 {
     EMOS_ASSERT( id < EMOS_TASK_MAX );
     if( emos_task_array[id].task_cb == NULL)
@@ -80,7 +82,7 @@ emos_task_status_t emos_event_post( emos_taskid_t id, emos_event_t events )
     return EMOS_OK;
 }
 
-emos_task_status_t emos_event_cancel( emos_taskid_t id, emos_event_t events )
+emos_status_t emos_event_cancel( emos_taskid_t id, emos_event_t events )
 {
     EMOS_ASSERT( id < EMOS_TASK_MAX );
     if( emos_task_array[id].task_cb == NULL)
@@ -91,7 +93,7 @@ emos_task_status_t emos_event_cancel( emos_taskid_t id, emos_event_t events )
     return EMOS_OK;
 }
 
-static emos_task_status_t emos_delay_event_insert( emos_taskid_t id,emos_event_t events, uint32_t tick,uint8_t is_every)
+static emos_status_t emos_delay_event_insert( emos_taskid_t id,emos_event_t events, uint32_t tick,uint8_t is_every)
 {
     int16_t free_idx = -1;
     for( uint16_t i = 0;i < EMOS_DELAY_EVENTS_MAX;i++)
@@ -123,7 +125,7 @@ static emos_task_status_t emos_delay_event_insert( emos_taskid_t id,emos_event_t
     return EMOS_OK;
 }
 
-emos_task_status_t emos_event_post_after( emos_taskid_t id, emos_event_t events, uint32_t tick )
+emos_status_t emos_event_post_after( emos_taskid_t id, emos_event_t events, uint32_t tick )
 {
     EMOS_ASSERT( id < EMOS_TASK_MAX );
     if( emos_task_array[id].task_cb == NULL)
@@ -133,7 +135,7 @@ emos_task_status_t emos_event_post_after( emos_taskid_t id, emos_event_t events,
     return emos_delay_event_insert(id,events,tick,0);
 }
 
-emos_task_status_t emos_event_post_every( emos_taskid_t id, emos_event_t events, uint32_t tick )
+emos_status_t emos_event_post_every( emos_taskid_t id, emos_event_t events, uint32_t tick )
 {
     EMOS_ASSERT( tick != 0 );
     EMOS_ASSERT( id < EMOS_TASK_MAX );
@@ -144,7 +146,7 @@ emos_task_status_t emos_event_post_every( emos_taskid_t id, emos_event_t events,
     return emos_delay_event_insert(id,events,tick,1);
 }
 
-emos_task_status_t emos_event_unarrived_cancel( emos_taskid_t id, emos_event_t events )
+emos_status_t emos_event_unarrived_cancel( emos_taskid_t id, emos_event_t events )
 {
     EMOS_ASSERT( id < EMOS_TASK_MAX );
     if( emos_task_array[id].task_cb == NULL)
@@ -220,11 +222,18 @@ void emos_run( void )
     }
     for(emos_taskid_t id = 0;id < EMOS_TASK_MAX;id++)
     {
-        emos_event_t events = emos_task_array[id].events;
-        if((emos_task_array[id].task_cb != NULL)&&( events != 0))
+        if( emos_task_array[id].task_cb != NULL)
         {
-            emos_task_array[id].events &= ~events;
-            emos_task_array[id].task_cb(id,events);
+            if( emos_msg_is_pending(&(emos_task_array[id].msg)))
+            {
+                emos_task_array[id].events |=EMOS_EV_SYS_MSG;
+            }
+            emos_event_t events = emos_task_array[id].events;
+            if( events != 0)
+            {
+                emos_task_array[id].events &= ~events;
+                emos_task_array[id].task_cb(id,events);
+            }
         }
     }
 }
