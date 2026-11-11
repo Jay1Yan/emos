@@ -1,3 +1,6 @@
+/* SPDX-License-Identifier: MIT
+ * Copyright (c) 2026 yyj
+ */
 #include <stdint.h>
 #include "emos_config.h"
 

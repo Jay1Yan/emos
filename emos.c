@@ -1,3 +1,6 @@
+/* SPDX-License-Identifier: MIT
+ * Copyright (c) 2026 yyj
+ */
 #include "emos.h"
 #include "emos_mem.h"
 #include "emos_msg.h"
